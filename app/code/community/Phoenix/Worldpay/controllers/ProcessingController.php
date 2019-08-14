@@ -52,9 +52,9 @@ class Phoenix_Worldpay_ProcessingController extends Mage_Core_Controller_Front_A
             $order->addStatusToHistory(Mage_Sales_Model_Order::STATE_HOLDED, Mage::helper('worldpay')->__('Customer was redirected to Worldpay.'));
             $order->save();
 
-            $session->getQuote()->setIsActive(false)->save();
             $session->setWorldpayQuoteId($session->getQuoteId());
             $session->setWorldpayRealOrderId($session->getLastRealOrderId());
+            $session->getQuote()->setIsActive(false)->save();
             $session->clear();
 
             $this->loadLayout();
@@ -101,7 +101,6 @@ class Phoenix_Worldpay_ProcessingController extends Mage_Core_Controller_Front_A
             $session->unsWorldpayRealOrderId();
             $session->setQuoteId($quoteId);
             $session->setLastSuccessQuoteId($quoteId);
-            $session->getQuote()->setIsActive(false)->save();
             $this->_redirect('checkout/onepage/success');
             return;
         } catch (Mage_Core_Exception $e) {
