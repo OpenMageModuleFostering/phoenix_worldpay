@@ -17,8 +17,11 @@
  * @copyright  Copyright (c) 2009 Phoenix Medien GmbH & Co. KG (http://www.phoenix-medien.de)
  */
 
+
 class Phoenix_Worldpay_Model_Cc extends Mage_Payment_Model_Method_Abstract
+
 {  
+
 	/**   
 	* unique internal payment method identifier   
 	*    
@@ -34,7 +37,7 @@ class Phoenix_Worldpay_Model_Cc extends Mage_Payment_Model_Method_Abstract
     protected $_canVoid                 = false;
     protected $_canUseInternal          = false;
     protected $_canUseCheckout          = true;
-    protected $_canUseForMultishipping  = true;
+    protected $_canUseForMultishipping  = false;
 
     protected $_paymentMethod			= 'cc';
     protected $_defaultLocale			= 'en';
