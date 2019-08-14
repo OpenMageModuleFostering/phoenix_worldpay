@@ -111,6 +111,7 @@
 						</transaction_password>
 						<security_key>
 							<label>MD5 secret</label>
+							<comment>Should be between 8-16 characters.</comment>
                             <frontend_type>text</frontend_type>
                             <sort_order>9</sort_order>
                             <show_in_default>1</show_in_default>

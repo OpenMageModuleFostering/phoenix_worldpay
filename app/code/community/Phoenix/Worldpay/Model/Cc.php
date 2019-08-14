@@ -132,6 +132,7 @@ class Phoenix_Worldpay_Model_Cc extends Mage_Payment_Model_Method_Abstract
     					'testMode'		=>	($this->getConfigData('transaction_mode') == 'test') ? '100' : '0',
 	    				'amount'		=>	$price,
     					'currency'		=>	$currency,
+    					'hideCurrency'	=>	'true',
     					'desc'			=>	Mage::helper('worldpay')->__('Your purchase at') . ' ' . Mage::app()->getStore()->getName(),
 						'name'			=>	Mage::helper('core')->removeAccents($billing->getFirstname().' '.$billing->getLastname()),
 						'address'		=>	Mage::helper('core')->removeAccents($street[0]).'&#10;'.Mage::helper('core')->removeAccents($billing->getCity()),
