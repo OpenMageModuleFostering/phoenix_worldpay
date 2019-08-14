@@ -20,9 +20,9 @@
 <?php 
 	echo $this->getMethod()->getTitle() . '<br/>';
 	if ($this->getInfo()->getLastTransId() == '') {
-		echo $this->__('Payment has not been processed yet.') . '<br/>';
+		echo Mage::helper('worldpay')->__('Payment has not been processed yet.') . '<br/>';
 	} else {
-		echo $this->__('Worldpay Transaction ID: %s', $this->htmlEscape($this->getInfo()->getLastTransId())) . '<br/>';
-		echo $this->__('AVS status: %s', $this->htmlEscape($this->getInfo()->getCcAvsStatus())) . '<br/>';
+		echo Mage::helper('worldpay')->__('Worldpay Transaction ID: %s', $this->htmlEscape($this->getInfo()->getLastTransId())) . '<br/>';
+		echo Mage::helper('worldpay')->__('AVS status: %s', $this->htmlEscape($this->getInfo()->getCcAvsStatus())) . '<br/>';
 	}
 ?>

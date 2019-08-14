@@ -12,16 +12,24 @@
  * obtain it through the world-wide-web, please send an email
  * to license@magentocommerce.com so we can send you a copy immediately.
  *
- * @category   design_default
+ * @category   Phoenix
  * @package    Phoenix_Worldpay
  * @copyright  Copyright (c) 2008 Phoenix Medien GmbH & Co. KG (http://www.phoenix-medien.de)
  */
-?>
-<?php 
-	echo $this->getMethod()->getTitle() . '<br/>';
-	if ($this->getInfo()->getLastTransId() == '') {
-		echo '<em>' . Mage::helper('worldpay')->__($this->getMethodCode().':You will be redirected to Worldpay website when you place an order.') . '</em>';
-	} else {
-		echo Mage::helper('worldpay')->__('Worldpay Transaction ID: %s', $this->htmlEscape($this->getInfo()->getLastTransId())) . '<br/>';
-	}
-?>
+
+class Phoenix_Worldpay_Block_Cancel extends Mage_Core_Block_Template
+{
+    protected function _construct()
+    {
+        parent::_construct();
+        $this->setTemplate('worldpay/cancel.phtml');
+    }
+
+    /**
+     * Get continue shopping url
+     */
+    public function getContinueShoppingUrl()
+    {
+        return Mage::getUrl('*/*/cancel', array('_nosid' => true));
+    }
+}

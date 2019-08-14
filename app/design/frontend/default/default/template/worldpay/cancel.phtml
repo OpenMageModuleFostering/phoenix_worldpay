@@ -14,14 +14,15 @@
  *
  * @category   design_default
  * @package    Phoenix_Worldpay
- * @copyright  Copyright (c) 2008 Phoenix Medien GmbH & Co. KG (http://www.phoenix-medien.de)
+ * @copyright  Copyright (c) 2009 Phoenix Medien GmbH & Co. KG (http://www.phoenix-medien.de)
  */
 ?>
-<?php 
-	echo $this->getMethod()->getTitle() . '<br/>';
-	if ($this->getInfo()->getLastTransId() == '') {
-		echo '<em>' . Mage::helper('worldpay')->__($this->getMethodCode().':You will be redirected to Worldpay website when you place an order.') . '</em>';
-	} else {
-		echo Mage::helper('worldpay')->__('Worldpay Transaction ID: %s', $this->htmlEscape($this->getInfo()->getLastTransId())) . '<br/>';
-	}
-?>
+<html>
+<meta http-equiv="refresh" content="0; URL=<?php echo $this->getContinueShoppingUrl()?>">
+<body>
+<div class="page-head">
+    <h3><?php echo Mage::helper('worldpay')->__('Payment was canceled') ?></h3>
+</div>
+<p><?php echo Mage::helper('worldpay')->__('Please <a href="%s">continue shopping</a>.', $this->getContinueShoppingUrl()) ?></p>
+</body>
+</html>

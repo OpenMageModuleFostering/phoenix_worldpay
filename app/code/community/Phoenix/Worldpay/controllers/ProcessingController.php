@@ -14,7 +14,7 @@
  *
  * @category   Phoenix
  * @package    Phoenix_Worldpay
- * @copyright  Copyright (c) 2009 Phoenix Medien GmbH & Co. KG (http://www.phoenix-medien.de)
+ * @copyright  Copyright (c) 2010 Phoenix Medien GmbH & Co. KG (http://www.phoenix-medien.de)
  */
 
 class Phoenix_Worldpay_ProcessingController extends Mage_Core_Controller_Front_Action
@@ -22,26 +22,19 @@ class Phoenix_Worldpay_ProcessingController extends Mage_Core_Controller_Front_A
     protected $_redirectBlockType = 'worldpay/processing';
     protected $_successBlockType = 'worldpay/success';
     protected $_failureBlockType = 'worldpay/failure';
-    
-    protected $_sendNewOrderEmail = true;
-    
+    protected $_cancelBlockType = 'worldpay/cancel';
+
+
     protected $_order = NULL;
     protected $_paymentInst = NULL;
-	
-    protected function _expireAjax()
-    {
-        if (!$this->getCheckout()->getQuote()->hasItems()) {
-            $this->getResponse()->setHeader('HTTP/1.1','403 Session Expired');
-            exit;
-        }
-    }
+
 
     /**
      * Get singleton of Checkout Session Model
      *
      * @return Mage_Checkout_Model_Session
      */
-    public function getCheckout()
+    protected function _getCheckout()
     {
         return Mage::getSingleton('checkout/session');
     }
@@ -51,58 +44,43 @@ class Phoenix_Worldpay_ProcessingController extends Mage_Core_Controller_Front_A
      */
     public function redirectAction()
     {
-        $session = $this->getCheckout();
-        $session->setWorldpayQuoteId($session->getQuoteId());
-        $session->setWorldpayRealOrderId($session->getLastRealOrderId());
+        try {
+            $session = $this->_getCheckout();
 
-        $order = Mage::getModel('sales/order');
-        $order->loadByIncrementId($session->getLastRealOrderId());
-		$order->addStatusToHistory(Mage_Sales_Model_Order::STATE_HOLDED, Mage::helper('worldpay')->__('Customer was redirected to Worldpay.'));
-        $order->save();
+            $order = Mage::getModel('sales/order');
+            $order->loadByIncrementId($session->getLastRealOrderId());
+            $order->addStatusToHistory(Mage_Sales_Model_Order::STATE_HOLDED, Mage::helper('worldpay')->__('Customer was redirected to Worldpay.'));
+            $order->save();
 
-        $this->getResponse()->setBody(
-            $this->getLayout()
-                ->createBlock($this->_redirectBlockType)
-                ->setOrder($order)
-                ->toHtml()
-        );
+            $session->getQuote()->setIsActive(false)->save();
+            $session->setWorldpayQuoteId($session->getQuoteId());
+            $session->setWorldpayRealOrderId($session->getLastRealOrderId());
+            $session->clear();
 
-        $session->unsQuoteId();
+            $this->loadLayout();
+            $this->renderLayout();
+        } catch (Mage_Core_Exception $e) {
+            $this->_getCheckout()->addError($e->getMessage());
+        } catch(Exception $e) {
+            Mage::logException($e);
+        }
     }
-    
+
     /**
      * Worldpay returns POST variables to this action
      */
     public function responseAction()
     {
     	try {
-    		$request = $this->_checkReturnedPost();
-    		
-    			// save transaction ID and AVS info
-    		$this->_paymentInst
-    			->setTransactionId($request['transId'])
-    			->setCcAvsStatus($request['AVS']);
-            if ($this->_order->canInvoice()) {
-            	$invoice = $this->_order->prepareInvoice();
-            	
-                $invoice->register()->capture(); 
-                Mage::getModel('core/resource_transaction')
-                    ->addObject($invoice)
-                    ->addObject($invoice->getOrder())
-                    ->save();
+            $request = $this->_checkReturnedPost();
+            if ($request['transStatus'] == 'Y') {
+                $this->_processSale($request);
+            } elseif ($request['transStatus'] == 'C') {
+                $this->_processCancel($request);
+            } else {
+                Mage::throwException('Transaction was not successfull.');
             }
-            $this->_order->addStatusToHistory($this->_paymentInst->getConfigData('order_status'), Mage::helper('worldpay')->__($this->_paymentInst->getConfigData('request_type').':Customer returned successfully'));
-            $this->_order->save();
-
-	        $this->getResponse()->setBody(
-	            $this->getLayout()
-	                ->createBlock($this->_successBlockType)
-	                ->setOrder($this->_order)
-	                ->toHtml()
-	        );
-            
-    	} catch (Exception $e) {
-			Mage::log($e->getMessage());
+    	} catch (Mage_Core_Exception $e) {
     		$this->getResponse()->setBody(
 	            $this->getLayout()
 	                ->createBlock($this->_failureBlockType)
@@ -115,21 +93,32 @@ class Phoenix_Worldpay_ProcessingController extends Mage_Core_Controller_Front_A
     /**
      * Worldpay return action
      */
-    protected function successAction()
+    public function successAction()
     {
-        $session = $this->getCheckout();
-
-        $session->unsWorldpayRealOrderId();
-        $session->setQuoteId($session->getWorldpayQuoteId(true));
-        $session->getQuote()->setIsActive(false)->save();
-
-        $order = Mage::getModel('sales/order');
-        $order->load($this->getCheckout()->getLastOrderId());
-        if($order->getId() && $this->_sendNewOrderEmail)
-            $order->sendNewOrderEmail();
-
-		$this->_redirect('checkout/onepage/success');
+        try {
+            $session = $this->_getCheckout();
+            $quoteId =  $session->getWorldpayQuoteId();
+            $this->_getCheckout()->setLastSuccessQuoteId($quoteId);
+            $this->_redirect('checkout/onepage/success');
+            return;
+        } catch (Mage_Core_Exception $e) {
+            $this->_getCheckout()->addError($e->getMessage());
+        } catch(Exception $e) {
+            Mage::logException($e);
+        }
+        $this->_redirect('checkout/cart');
     }
+
+    /**
+     * Worldpay return action
+     */
+    public function cancelAction()
+    {
+        $this->_getCheckout()->setQuoteId($this->_getCheckout()->getWorldpayQuoteId());
+        $this->_getCheckout()->addError(Mage::helper('worldpay')->__('Payment was canceled'));
+        $this->_redirect('checkout/cart');
+    }
+
 
     /**
      * Checking POST variables.
@@ -139,46 +128,99 @@ class Phoenix_Worldpay_ProcessingController extends Mage_Core_Controller_Front_A
     {
     		// check request type
         if (!$this->getRequest()->isPost())
-        	throw new Exception('Wrong request type.', 10);
+        	Mage::throwException('Wrong request type.');
 
         	// get request variables
         $request = $this->getRequest()->getPost();
         if (empty($request))
-        	throw new Exception('Request doesn\'t contain POST elements.', 20);
-        
+        	Mage::throwException('Request doesn\'t contain POST elements.');
+
 			// check order id
         if (empty($request['MC_orderid']) || strlen($request['MC_orderid']) > 50)
-        	throw new Exception('Missing or invalid order ID', 40);
-        	
+        	Mage::throwException('Missing or invalid order ID');
+
         	// load order for further validation
         $this->_order = Mage::getModel('sales/order')->loadByIncrementId($request['MC_orderid']);
+        if (!$this->_order->getId())
+        	Mage::throwException('Order not found');
+
         $this->_paymentInst = $this->_order->getPayment()->getMethodInstance();
-        
+
         	// check transaction password
         if ($this->_paymentInst->getConfigData('transaction_password') != $request['callbackPW'])
-        	throw new Exception('Transaction password wrong');
+        	Mage::throwException('Transaction password wrong');
 
-        	// check transaction status
-        if (!empty($request['transStatus']) && $request['transStatus'] != 'Y')
-        	throw new Exception('Transaction was not successfull.');
 
+        return $request;
+    }
+
+    /**
+     * Process success response
+     */
+    protected function _processSale($request)
+    {
             // check transaction amount and currency
-		if ($this->_order->getPayment()->getMethodInstance()->getConfigData('use_store_currency')) {
+        if ($this->_paymentInst->getConfigData('use_store_currency')) {
         	$price      = number_format($this->_order->getGrandTotal(),2,'.','');
         	$currency   = $this->_order->getOrderCurrencyCode();
     	} else {
         	$price      = number_format($this->_order->getBaseGrandTotal(),2,'.','');
         	$currency   = $this->_order->getBaseCurrencyCode();
     	}
-        	
+
         	// check transaction amount
         if ($price != $request['authAmount'])
-        	throw new Exception('Transaction currency doesn\'t match.');
-        	
+        	Mage::throwException('Transaction currency doesn\'t match.');
+
         	// check transaction currency
         if ($currency != $request['authCurrency'])
-        	throw new Exception('Transaction currency doesn\'t match.');
+        	Mage::throwException('Transaction currency doesn\'t match.');
 
-        return $request;
+            // save transaction ID and AVS info
+        $this->_order->getPayment()->setLastTransId($request['transId']);
+        $this->_order->getPayment()->setCcAvsStatus($request['AVS']);
+
+        switch($request['authMode']) {
+            case 'A':
+                if ($this->_order->canInvoice()) {
+                    $invoice = $this->_order->prepareInvoice();
+                    $invoice->register()->capture();
+                    $this->_order->addRelatedObject($invoice);
+                }
+                $this->_order->setState(Mage_Sales_Model_Order::STATE_PROCESSING, true,  Mage::helper('worldpay')->__('authorize: Customer returned successfully'));
+                break;
+            case 'E':
+                $this->_order->setState(Mage_Sales_Model_Order::STATE_PROCESSING, true,  Mage::helper('worldpay')->__('preauthorize: Customer returned successfully'));
+                break;
+        }
+
+        $this->_order->sendNewOrderEmail();
+        $this->_order->setEmailSent(true);
+
+        $this->_order->save();
+
+        $this->getResponse()->setBody(
+            $this->getLayout()
+                ->createBlock($this->_successBlockType)
+                ->setOrder($this->_order)
+                ->toHtml()
+        );
+    }
+
+    /**
+     * Process success response
+     */
+    protected function _processCancel($request)
+    {
+        $this->_order->cancel();
+        $this->_order->addStatusToHistory(Mage_Sales_Model_Order::STATE_CANCELED, Mage::helper('worldpay')->__('Payment was canceled'));
+        $this->_order->save();
+
+        $this->getResponse()->setBody(
+            $this->getLayout()
+                ->createBlock($this->_cancelBlockType)
+                ->setOrder($this->_order)
+                ->toHtml()
+        );
     }
 }

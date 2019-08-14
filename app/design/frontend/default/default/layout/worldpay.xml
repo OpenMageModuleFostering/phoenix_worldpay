@@ -31,5 +31,12 @@ Worldpay Failure Response Review
         <block type="worldpay/failure" name="worldpay_failure" template="worldpay/failure.phtml" />
     </reference>
 </worldpay_processing_failure>
-
+<worldpay_processing_redirect>
+    <reference name="root">
+        <action method="setTemplate"><template>worldpay/blank.phtml</template></action>
+    </reference>
+    <reference name="content">
+        <block type="worldpay/redirect" name="worldpay_redirect" template="worldpay/redirect.phtml" />
+    </reference>
+</worldpay_processing_redirect>
 </layout>

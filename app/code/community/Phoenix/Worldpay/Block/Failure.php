@@ -30,6 +30,6 @@ class Phoenix_Worldpay_Block_Failure extends Mage_Core_Block_Template
      */
     public function getContinueShoppingUrl()
     {
-        return Mage::getUrl('checkout/cart');
+        return Mage::getUrl('checkout/cart', array('_nosid' => true));
     }
 }

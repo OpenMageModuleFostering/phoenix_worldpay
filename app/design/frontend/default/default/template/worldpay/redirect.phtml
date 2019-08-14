@@ -17,11 +17,18 @@
  * @copyright  Copyright (c) 2008 Phoenix Medien GmbH & Co. KG (http://www.phoenix-medien.de)
  */
 ?>
-<?php 
-	echo $this->getMethod()->getTitle() . '<br/>';
-	if ($this->getInfo()->getLastTransId() == '') {
-		echo '<em>' . Mage::helper('worldpay')->__($this->getMethodCode().':You will be redirected to Worldpay website when you place an order.') . '</em>';
-	} else {
-		echo Mage::helper('worldpay')->__('Worldpay Transaction ID: %s', $this->htmlEscape($this->getInfo()->getLastTransId())) . '<br/>';
-	}
-?>
+<b><?php echo Mage::helper('worldpay')->__('You will be redirected to Worldpay in a few seconds.'); ?></b>
+<form name="worldpay_checkout" id="worldpay_checkout" action="<?php echo $this->getFormAction();?>" method="POST">
+<?php if (is_array($this->getFormData())): ?>
+    <?php foreach ($this->getFormData() as $name => $value): ?>
+        <input type="hidden" name="<?php echo $name; ?>" value="<?php echo $value; ?>"/>
+    <?php endforeach; ?>
+<?php endif; ?>
+</form>
+
+<script type="text/javascript">
+//<![CDATA[
+    var paymentform = document.getElementById('worldpay_checkout');
+    window.onload = paymentform.submit();
+//]]>
+</script>

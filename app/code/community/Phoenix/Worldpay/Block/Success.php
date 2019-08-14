@@ -21,8 +21,8 @@ class Phoenix_Worldpay_Block_Success extends Mage_Core_Block_Abstract
 {
     protected function _toHtml()
     {
-    	$successUrl = Mage::getUrl('*/*/success');
-    	
+        $successUrl = Mage::getUrl('*/*/success', array('_nosid' => true));
+
         $html	= '<html>'
         		. '<meta http-equiv="refresh" content="0; URL='.$successUrl.'">'
         		. '<body>'

@@ -21,7 +21,7 @@
     <?php $_code=$this->getMethodCode() ?>
     <ul id="payment_form_<?php echo $_code ?>" style="display:none">
         <li>
-            <?php echo $this->__($_code.':You will be redirected to Worldpay website when you place an order.') ?>
+            <?php echo Mage::helper('worldpay')->__($_code.':You will be redirected to Worldpay website when you place an order.') ?>
         </li>
     </ul>
 </fieldset>

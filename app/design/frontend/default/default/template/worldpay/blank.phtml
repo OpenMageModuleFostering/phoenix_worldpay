@@ -17,11 +17,11 @@
  * @copyright  Copyright (c) 2008 Phoenix Medien GmbH & Co. KG (http://www.phoenix-medien.de)
  */
 ?>
-<?php 
-	echo $this->getMethod()->getTitle() . '<br/>';
-	if ($this->getInfo()->getLastTransId() == '') {
-		echo '<em>' . Mage::helper('worldpay')->__($this->getMethodCode().':You will be redirected to Worldpay website when you place an order.') . '</em>';
-	} else {
-		echo Mage::helper('worldpay')->__('Worldpay Transaction ID: %s', $this->htmlEscape($this->getInfo()->getLastTransId())) . '<br/>';
-	}
-?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="<?php echo $this->getLang() ?>" lang="<?php echo $this->getLang() ?>">
+<head>   
+</head>
+<body>
+    <?php echo $this->getChildHtml('content') ?>
+</body>
+</html>
