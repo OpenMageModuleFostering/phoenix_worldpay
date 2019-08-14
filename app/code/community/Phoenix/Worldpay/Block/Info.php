@@ -17,7 +17,6 @@
  * @copyright  Copyright (c) 2008 Phoenix Medien GmbH & Co. KG (http://www.phoenix-medien.de)
  */
 
-
 class Phoenix_Worldpay_Block_Info extends Mage_Payment_Block_Info
 {
     protected function _construct()
@@ -25,7 +24,7 @@ class Phoenix_Worldpay_Block_Info extends Mage_Payment_Block_Info
         parent::_construct();
         $this->setTemplate('worldpay/info.phtml');
     }
-    
+
     public function getMethodCode()
     {
         return $this->getInfo()->getMethodInstance()->getCode();

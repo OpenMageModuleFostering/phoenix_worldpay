@@ -15,5 +15,6 @@
 "Authorization","Autorisierung"
 "Preauthorization","Vorautorisierung"
 "Your purchase at","Ihr Einkauf bei"
-"Error during refunding online. Server response: %s", "Fehler während der Gutschrift-Erteilung. Server-Antwort: %s"
-"Worldpay transaction has been captured.", "Worldpay Transaktion wurde abgebucht."
+"Error during refunding online. Server response: %s","Fehler während der Gutschrift-Erteilung. Server-Antwort: %s"
+"Worldpay transaction has been captured.","Worldpay Transaktion wurde abgebucht."
+"The order has been canceled.,"Der Bestellvorgang wurde abgebrochen."
