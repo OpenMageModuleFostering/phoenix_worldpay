@@ -19,12 +19,6 @@
 
 class Phoenix_Worldpay_Block_Redirect extends Mage_Core_Block_Template
 {
-
-    protected function _construct()
-    {
-        parent::_construct();
-    }
-
     /**
      * Return checkout session instance
      *
@@ -52,7 +46,7 @@ class Phoenix_Worldpay_Block_Redirect extends Mage_Core_Block_Template
     }
 
     /**
-     * Get Form data by using ogone payment api
+     * Get form data
      *
      * @return array
      */

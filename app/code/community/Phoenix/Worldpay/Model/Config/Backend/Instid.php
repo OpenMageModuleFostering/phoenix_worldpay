@@ -26,24 +26,26 @@ class Phoenix_Worldpay_Model_Config_Backend_Instid extends Mage_Core_Model_Confi
      */
     protected function _beforeSave()
     {
-    	try {
-			$client = new Varien_Http_Client();
-			$client->setUri((string)Mage::getConfig()->getNode('phoenix/worldpay/verify_url'))
-				->setConfig(array('timeout'=>10,))
-				->setParameterPost('inst_id', $this->getValue())
-				->setMethod(Zend_Http_Client::POST);		
-			$response = $client->request();
-			$responseBody = $response->getBody();
-			if (empty($responseBody) || $responseBody != 'VERIFIED') {
-				// verification failed. throw error message (not implemented yet).
-			}
-			
-			// okay, inst_id verified. continue saving.
+        try {
+            if ($this->getValue()) {
+                $client = new Varien_Http_Client();
+                $client->setUri((string)Mage::getConfig()->getNode('phoenix/worldpay/verify_url'))
+                    ->setConfig(array('timeout'=>10,))
+                    ->setHeaders('accept-encoding', '')
+                    ->setParameterPost('inst_id', $this->getValue())
+                    ->setMethod(Zend_Http_Client::POST);
+                $response = $client->request();
+//                $responseBody = $response->getBody();
+//                if (empty($responseBody) || $responseBody != 'VERIFIED') {
+                    // verification failed. throw error message (not implemented yet).
+//                }
 
-		} catch (Zend_Http_Client_Exception $e) {
-			// verification system unavailable. no further action.
-		}
-		
-        return $this;
+                // okay, inst_id verified. continue saving.
+            }
+        } catch (Exception $e) {
+            // verification system unavailable. no further action.
+        }
+
+        return parent::_beforeSave();
     }
 }

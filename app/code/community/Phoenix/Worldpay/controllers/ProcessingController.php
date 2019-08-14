@@ -71,7 +71,7 @@ class Phoenix_Worldpay_ProcessingController extends Mage_Core_Controller_Front_A
      */
     public function responseAction()
     {
-    	try {
+        try {
             $request = $this->_checkReturnedPost();
             if ($request['transStatus'] == 'Y') {
                 $this->_processSale($request);
@@ -80,14 +80,14 @@ class Phoenix_Worldpay_ProcessingController extends Mage_Core_Controller_Front_A
             } else {
                 Mage::throwException('Transaction was not successfull.');
             }
-    	} catch (Mage_Core_Exception $e) {
-    		$this->getResponse()->setBody(
-	            $this->getLayout()
-	                ->createBlock($this->_failureBlockType)
-	                ->setOrder($this->_order)
-	                ->toHtml()
-	        );
-    	}
+        } catch (Mage_Core_Exception $e) {
+            $this->getResponse()->setBody(
+                $this->getLayout()
+                    ->createBlock($this->_failureBlockType)
+                    ->setOrder($this->_order)
+                    ->toHtml()
+            );
+        }
     }
 
     /**
@@ -98,7 +98,10 @@ class Phoenix_Worldpay_ProcessingController extends Mage_Core_Controller_Front_A
         try {
             $session = $this->_getCheckout();
             $quoteId =  $session->getWorldpayQuoteId();
-            $this->_getCheckout()->setLastSuccessQuoteId($quoteId);
+            $session->unsWorldpayRealOrderId();
+            $session->setQuoteId($quoteId);
+            $session->setLastSuccessQuoteId($quoteId);
+            $session->getQuote()->setIsActive(false)->save();
             $this->_redirect('checkout/onepage/success');
             return;
         } catch (Mage_Core_Exception $e) {
@@ -126,29 +129,41 @@ class Phoenix_Worldpay_ProcessingController extends Mage_Core_Controller_Front_A
      */
     protected function _checkReturnedPost()
     {
-    		// check request type
+            // check request type
         if (!$this->getRequest()->isPost())
-        	Mage::throwException('Wrong request type.');
+            Mage::throwException('Wrong request type.');
 
-        	// get request variables
+            // validate request ip coming from WorldPay/RBS subnet
+        $helper = Mage::helper('core/http');
+        if (method_exists($helper, 'getRemoteAddr')) {
+            $remoteAddr = $helper->getRemoteAddr();
+        } else {
+            $request = $this->getRequest()->getServer();
+            $remoteAddr = $request['REMOTE_ADDR'];
+        }
+        if (substr($remoteAddr,0,11) != '155.136.16.') {
+            Mage::throwException('IP can\'t be validated as WorldPay-IP.');
+        }
+
+            // get request variables
         $request = $this->getRequest()->getPost();
         if (empty($request))
-        	Mage::throwException('Request doesn\'t contain POST elements.');
+            Mage::throwException('Request doesn\'t contain POST elements.');
 
-			// check order id
+            // check order id
         if (empty($request['MC_orderid']) || strlen($request['MC_orderid']) > 50)
-        	Mage::throwException('Missing or invalid order ID');
+            Mage::throwException('Missing or invalid order ID');
 
-        	// load order for further validation
+            // load order for further validation
         $this->_order = Mage::getModel('sales/order')->loadByIncrementId($request['MC_orderid']);
         if (!$this->_order->getId())
-        	Mage::throwException('Order not found');
+            Mage::throwException('Order not found');
 
         $this->_paymentInst = $this->_order->getPayment()->getMethodInstance();
 
-        	// check transaction password
+            // check transaction password
         if ($this->_paymentInst->getConfigData('transaction_password') != $request['callbackPW'])
-        	Mage::throwException('Transaction password wrong');
+            Mage::throwException('Transaction password wrong');
 
 
         return $request;
@@ -161,20 +176,20 @@ class Phoenix_Worldpay_ProcessingController extends Mage_Core_Controller_Front_A
     {
             // check transaction amount and currency
         if ($this->_paymentInst->getConfigData('use_store_currency')) {
-        	$price      = number_format($this->_order->getGrandTotal(),2,'.','');
-        	$currency   = $this->_order->getOrderCurrencyCode();
-    	} else {
-        	$price      = number_format($this->_order->getBaseGrandTotal(),2,'.','');
-        	$currency   = $this->_order->getBaseCurrencyCode();
-    	}
+            $price      = number_format($this->_order->getGrandTotal(),2,'.','');
+            $currency   = $this->_order->getOrderCurrencyCode();
+        } else {
+            $price      = number_format($this->_order->getBaseGrandTotal(),2,'.','');
+            $currency   = $this->_order->getBaseCurrencyCode();
+        }
 
-        	// check transaction amount
+            // check transaction amount
         if ($price != $request['authAmount'])
-        	Mage::throwException('Transaction currency doesn\'t match.');
+            Mage::throwException('Transaction currency doesn\'t match.');
 
-        	// check transaction currency
+            // check transaction currency
         if ($currency != $request['authCurrency'])
-        	Mage::throwException('Transaction currency doesn\'t match.');
+            Mage::throwException('Transaction currency doesn\'t match.');
 
             // save transaction ID and AVS info
         $this->_order->getPayment()->setLastTransId($request['transId']);
@@ -187,10 +202,10 @@ class Phoenix_Worldpay_ProcessingController extends Mage_Core_Controller_Front_A
                     $invoice->register()->capture();
                     $this->_order->addRelatedObject($invoice);
                 }
-                $this->_order->setState(Mage_Sales_Model_Order::STATE_PROCESSING, true,  Mage::helper('worldpay')->__('authorize: Customer returned successfully'));
+                $this->_order->addStatusToHistory($this->_paymentInst->getConfigData('order_status'), Mage::helper('worldpay')->__('authorize: Customer returned successfully'));
                 break;
             case 'E':
-                $this->_order->setState(Mage_Sales_Model_Order::STATE_PROCESSING, true,  Mage::helper('worldpay')->__('preauthorize: Customer returned successfully'));
+                $this->_order->setState(Mage_Sales_Model_Order::STATE_PROCESSING, $this->_paymentInst->getConfigData('order_status'),  Mage::helper('worldpay')->__('preauthorize: Customer returned successfully'));
                 break;
         }
 
