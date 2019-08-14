@@ -162,12 +162,21 @@ class Phoenix_Worldpay_ProcessingController extends Mage_Core_Controller_Front_A
         if (!empty($request['transStatus']) && $request['transStatus'] != 'Y')
         	throw new Exception('Transaction was not successfull.');
 
+            // check transaction amount and currency
+		if ($this->_order->getPayment()->getMethodInstance()->getConfigData('use_store_currency')) {
+        	$price      = number_format($this->_order->getGrandTotal(),2,'.','');
+        	$currency   = $this->_order->getOrderCurrencyCode();
+    	} else {
+        	$price      = number_format($this->_order->getBaseGrandTotal(),2,'.','');
+        	$currency   = $this->_order->getBaseCurrencyCode();
+    	}
+        	
         	// check transaction amount
-        if (number_format($this->_order->getBaseGrandTotal(),2,'.','') != $request['authAmount'])
+        if ($price != $request['authAmount'])
         	throw new Exception('Transaction currency doesn\'t match.');
         	
         	// check transaction currency
-        if ($this->_order->getBaseCurrencyCode() != $request['authCurrency'])
+        if ($currency != $request['authCurrency'])
         	throw new Exception('Transaction currency doesn\'t match.');
 
         return $request;

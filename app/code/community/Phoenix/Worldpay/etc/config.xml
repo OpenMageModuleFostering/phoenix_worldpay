@@ -21,7 +21,7 @@
 <config>
     <modules>
         <Phoenix_Worldpay>
-            <version>1.0.0</version>
+            <version>1.1.0</version>
         </Phoenix_Worldpay>
     </modules>
     <global>
@@ -125,6 +125,7 @@
                 <order_status>1</order_status>
                 <title>Credit Card (Worldpay)</title>
                 <allowspecific>0</allowspecific>
+                <use_store_currency>0</use_store_currency>
                 <request_type>authorize</request_type>
 				<transaction_mode>test</transaction_mode>
 				<fix_contact>1</fix_contact>
