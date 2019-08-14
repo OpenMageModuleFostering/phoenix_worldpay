@@ -42,8 +42,8 @@ class Phoenix_Worldpay_Model_Cc extends Mage_Payment_Model_Method_Abstract
     protected $_paymentMethod			= 'cc';
     protected $_defaultLocale			= 'en';
     
-    protected $_testUrl	= 'https://select-test.wp3.rbsworldpay.com/wcc/purchase';
-    protected $_liveUrl	= 'https://select.wp3.rbsworldpay.com/wcc/purchase';
+    protected $_testUrl	= 'https://secure-test.wp3.rbsworldpay.com/wcc/purchase';
+    protected $_liveUrl	= 'https://secure.wp3.rbsworldpay.com/wcc/purchase';
 
     protected $_formBlockType = 'worldpay/form';
     protected $_infoBlockType = 'worldpay/info';
@@ -67,7 +67,7 @@ class Phoenix_Worldpay_Model_Cc extends Mage_Payment_Model_Method_Abstract
 
     public function getOrderPlaceRedirectUrl()
     {
-          return Mage::getUrl('worldpay/processing/redirect');
+          return Mage::getUrl('worldpay/processing/redirect', array('_secure'=>true));
     }
 
     public function capture(Varien_Object $payment, $amount)
