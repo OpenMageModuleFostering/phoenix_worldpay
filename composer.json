@@ -1,5 +1,7 @@
 {
     "keywords": [
         "openmage-module"
-    ]
+    ],
+    "name": "openmage-module-fostering\/phoenix_worldpay",
+    "license": "OSL-3.0"
 }
