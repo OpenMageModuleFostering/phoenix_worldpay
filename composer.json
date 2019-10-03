@@ -1,16 +1,5 @@
 {
-    "name": "OpenMageModuleFostering/Phoenix_Worldpay",
-    "type": "magento-module",
-    "license": "Open-Software-License-(OSL)",
-    "homepage": "",
-    "description": "WorldPay payment gateway for "Select Junior" credit card processing.",
-    "authors": [
-    {
-        "name": "Phoenix Medien",
-        "email": "info@phoenix-medien.de"
-    }
-],
-    "suggest": {
-        "magento-hackathon/magento-composer-installer": "*"
-    }
+    "keywords": [
+        "openmage-module"
+    ]
 }
